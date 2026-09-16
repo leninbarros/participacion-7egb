@@ -527,7 +527,9 @@
       alumnos.forEach(alumno => {
         const card = document.getElementById(`card-${alumno.id}`);
         if (card) {
-          if (bitacorasGlobal[alumno.id] && bitacorasGlobal[alumno.id].length > 0) {
+          // Usamos String(alumno.id) por si acaso las claves de la BD vinieron como texto
+          const notasAlumno = bitacorasGlobal[alumno.id] || bitacorasGlobal[String(alumno.id)] || [];
+          if (notasAlumno.length > 0) {
             card.classList.add('has-notes');
           } else {
             card.classList.remove('has-notes');
@@ -536,6 +538,7 @@
       });
     }
 
+    // 1. PRIMERO RENDERIZAMOS LAS TARJETAS EN EL DOM
     alumnos.forEach((alumno) => {
       const [apellido, nombresOriginales] = alumno.nombre.split(', ');
       const nombresFormateados = formatearNombre(nombresOriginales);
@@ -611,7 +614,7 @@
     function renderizarHistorialNotas() {
       const lista = document.getElementById('historialLista');
       lista.innerHTML = '';
-      const notas = bitacorasGlobal[alumnoActualId] || [];
+      const notas = bitacorasGlobal[alumnoActualId] || bitacorasGlobal[String(alumnoActualId)] || [];
 
       if (notas.length === 0) {
         lista.innerHTML = '<div style="color: #64748b; font-size: 13px; text-align: center; padding: 10px;">No hay notas registradas todavía.</div>';
@@ -674,7 +677,8 @@
 
     window.prepararEdicionNota = function(idx) {
       editandoIndice = idx;
-      const nota = bitacorasGlobal[alumnoActualId][idx];
+      const notasArr = bitacorasGlobal[alumnoActualId] || bitacorasGlobal[String(alumnoActualId)] || [];
+      const nota = notasArr[idx];
       document.getElementById('textoNuevaNota').value = nota.texto;
       document.getElementById('labelEditorNota').innerText = `Editando nota #${idx + 1}:`;
       document.getElementById('btnGuardarNota').innerText = "💾 Actualizar Nota";
@@ -684,11 +688,12 @@
     window.eliminarNotaBitacora = async function(idx) {
       if (!confirm("¿Estás seguro de eliminar esta nota de la bitácora?")) return;
 
-      bitacorasGlobal[alumnoActualId].splice(idx, 1);
+      const notasArr = bitacorasGlobal[alumnoActualId] || bitacorasGlobal[String(alumnoActualId)] || [];
+      notasArr.splice(idx, 1);
       
       try {
         await setDoc(doc(db, "bitacoras_7egb", String(alumnoActualId)), {
-          notas: bitacorasGlobal[alumnoActualId]
+          notas: notasArr
         });
         renderizarHistorialNotas();
         actualizarIndicadoresNotas();
@@ -700,7 +705,7 @@
     window.descargarPDFBitacora = function() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-      const notas = bitacorasGlobal[alumnoActualId] || [];
+      const notas = bitacorasGlobal[alumnoActualId] || bitacorasGlobal[String(alumnoActualId)] || [];
 
       doc.setFillColor(30, 41, 59);
       doc.rect(0, 0, 210, 30, "F");
@@ -863,7 +868,7 @@
       });
       navigator.clipboard.writeText(textoTotal.trim()).then(() => {
         alert("¡Todos los grupos fueron copiados al portapapeles!");
-      }).catch(err => {
+      }).catch(exports => {
         console.error("Error al copiar todos: ", err);
       });
     }
@@ -872,6 +877,7 @@
       document.getElementById('modalGrupos').classList.remove('active');
     }
 
+    // 2. CARGAMOS LA NUBE AL INICIAR LA APLICACIÓN DE FORMA ASÍNCRONA
     cargarBitacorasNube();
   </script>
 </body>
