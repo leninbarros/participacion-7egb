@@ -497,7 +497,7 @@
     ];
 
     const grid = document.getElementById('grid');
-    let alumnoActualId = null;
+    let alumnoActualId = null; // Se mantendrá estrictamente como String
     let alumnoActualNombre = "";
     let bitacorasGlobal = {};
     let editandoIndice = null;
@@ -515,7 +515,8 @@
       try {
         const querySnapshot = await getDocs(collection(db, "bitacoras_7egb"));
         querySnapshot.forEach((docSnap) => {
-          bitacorasGlobal[docSnap.id] = docSnap.data().notas || [];
+          // Forzamos la llave como String para evitar conflictos de tipos
+          bitacorasGlobal[String(docSnap.id)] = docSnap.data().notas || [];
         });
         actualizarIndicadoresNotas();
       } catch (e) {
@@ -527,7 +528,7 @@
       alumnos.forEach(alumno => {
         const card = document.getElementById(`card-${alumno.id}`);
         if (card) {
-          const notasAlumno = bitacorasGlobal[alumno.id] || bitacorasGlobal[String(alumno.id)] || [];
+          const notasAlumno = bitacorasGlobal[String(alumno.id)] || [];
           if (notasAlumno.length > 0) {
             card.classList.add('has-notes');
           } else {
@@ -594,7 +595,7 @@
     }
 
     window.abrirBitacora = function(id, nombreCompleto) {
-      alumnoActualId = id;
+      alumnoActualId = String(id); // Convertido explícitamente a String
       alumnoActualNombre = nombreCompleto;
       editandoIndice = null;
       document.getElementById('tituloBitacora').innerText = `Bitácora: ${nombreCompleto}`;
@@ -613,7 +614,7 @@
     function renderizarHistorialNotas() {
       const lista = document.getElementById('historialLista');
       lista.innerHTML = '';
-      const notas = bitacorasGlobal[alumnoActualId] || bitacorasGlobal[String(alumnoActualId)] || [];
+      const notas = bitacorasGlobal[alumnoActualId] || [];
 
       if (notas.length === 0) {
         lista.innerHTML = '<div style="color: #64748b; font-size: 13px; text-align: center; padding: 10px;">No hay notas registradas todavía.</div>';
@@ -662,7 +663,7 @@
       }
 
       try {
-        await setDoc(doc(db, "bitacoras_7egb", String(alumnoActualId)), {
+        await setDoc(doc(db, "bitacoras_7egb", alumnoActualId), {
           notas: bitacorasGlobal[alumnoActualId]
         });
         document.getElementById('textoNuevaNota').value = '';
@@ -676,7 +677,7 @@
 
     window.prepararEdicionNota = function(idx) {
       editandoIndice = idx;
-      const notasArr = bitacorasGlobal[alumnoActualId] || bitacorasGlobal[String(alumnoActualId)] || [];
+      const notasArr = bitacorasGlobal[alumnoActualId] || [];
       const nota = notasArr[idx];
       document.getElementById('textoNuevaNota').value = nota.texto;
       document.getElementById('labelEditorNota').innerText = `Editando nota #${idx + 1}:`;
@@ -687,11 +688,11 @@
     window.eliminarNotaBitacora = async function(idx) {
       if (!confirm("¿Estás seguro de eliminar esta nota de la bitácora?")) return;
 
-      const notasArr = bitacorasGlobal[alumnoActualId] || bitacorasGlobal[String(alumnoActualId)] || [];
+      const notasArr = bitacorasGlobal[alumnoActualId] || [];
       notasArr.splice(idx, 1);
       
       try {
-        await setDoc(doc(db, "bitacoras_7egb", String(alumnoActualId)), {
+        await setDoc(doc(db, "bitacoras_7egb", alumnoActualId), {
           notas: notasArr
         });
         renderizarHistorialNotas();
@@ -705,7 +706,7 @@
     window.descargarPDFBitacora = function() {
       const { jsPDF } = window.jspdf;
       const docPdf = new jsPDF();
-      const notas = bitacorasGlobal[alumnoActualId] || bitacorasGlobal[String(alumnoActualId)] || [];
+      const notas = bitacorasGlobal[alumnoActualId] || [];
 
       docPdf.setFillColor(30, 41, 59);
       docPdf.rect(0, 0, 210, 30, "F");
