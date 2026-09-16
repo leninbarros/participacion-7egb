@@ -527,7 +527,6 @@
       alumnos.forEach(alumno => {
         const card = document.getElementById(`card-${alumno.id}`);
         if (card) {
-          // Usamos String(alumno.id) por si acaso las claves de la BD vinieron como texto
           const notasAlumno = bitacorasGlobal[alumno.id] || bitacorasGlobal[String(alumno.id)] || [];
           if (notasAlumno.length > 0) {
             card.classList.add('has-notes');
@@ -538,7 +537,7 @@
       });
     }
 
-    // 1. PRIMERO RENDERIZAMOS LAS TARJETAS EN EL DOM
+    // RENDERIZAR TARJETAS EN EL DOM
     alumnos.forEach((alumno) => {
       const [apellido, nombresOriginales] = alumno.nombre.split(', ');
       const nombresFormateados = formatearNombre(nombresOriginales);
@@ -671,7 +670,7 @@
         actualizarIndicadoresNotas();
       } catch (e) {
         console.error("Error al guardar en Firebase: ", e);
-        alert("Hubo un error al guardar en la nube. Revisa tu conexión.");
+        alert("Hubo un error al guardar en la nube. Revisa las reglas de seguridad de Firestore.");
       }
     }
 
@@ -699,61 +698,62 @@
         actualizarIndicadoresNotas();
       } catch (e) {
         console.error("Error al eliminar nota: ", e);
+        alert("Error al eliminar en la nube.");
       }
     }
 
     window.descargarPDFBitacora = function() {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      const docPdf = new jsPDF();
       const notas = bitacorasGlobal[alumnoActualId] || bitacorasGlobal[String(alumnoActualId)] || [];
 
-      doc.setFillColor(30, 41, 59);
-      doc.rect(0, 0, 210, 30, "F");
+      docPdf.setFillColor(30, 41, 59);
+      docPdf.rect(0, 0, 210, 30, "F");
 
-      doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.text("REPORTE DE SEGUIMIENTO Y BITÁCORA", 14, 18);
+      docPdf.setTextColor(255, 255, 255);
+      docPdf.setFont("helvetica", "bold");
+      docPdf.setFontSize(16);
+      docPdf.text("REPORTE DE SEGUIMIENTO Y BITÁCORA", 14, 18);
 
-      doc.setTextColor(15, 23, 42);
-      doc.setFontSize(12);
-      doc.text(`Estudiante: ${alumnoActualNombre}`, 14, 45);
-      doc.text(`Fecha de emisión: ${new Date().toLocaleDateString()}`, 14, 53);
+      docPdf.setTextColor(15, 23, 42);
+      docPdf.setFontSize(12);
+      docPdf.text(`Estudiante: ${alumnoActualNombre}`, 14, 45);
+      docPdf.text(`Fecha de emisión: ${new Date().toLocaleDateString()}`, 14, 53);
 
-      doc.setDrawColor(56, 189, 248);
-      doc.line(14, 58, 196, 58);
+      docPdf.setDrawColor(56, 189, 248);
+      docPdf.line(14, 58, 196, 58);
 
       let yPos = 70;
-      doc.setFontSize(11);
+      docPdf.setFontSize(11);
 
       if (notas.length === 0) {
-        doc.setTextColor(100, 100, 100);
-        doc.text("No registra anotaciones ni compromisos previos en su bitácora.", 14, yPos);
+        docPdf.setTextColor(100, 100, 100);
+        docPdf.text("No registra anotaciones ni compromisos previos en su bitácora.", 14, yPos);
       } else {
         notas.forEach((n, index) => {
           if (yPos > 270) {
-            doc.addPage();
+            docPdf.addPage();
             yPos = 20;
           }
-          doc.setFont("helvetica", "bold");
-          doc.setTextColor(2, 132, 199);
-          doc.text(`Registro #${index + 1} - ${n.fecha}`, 14, yPos);
+          docPdf.setFont("helvetica", "bold");
+          docPdf.setTextColor(2, 132, 199);
+          docPdf.text(`Registro #${index + 1} - ${n.fecha}`, 14, yPos);
           
-          doc.setFont("helvetica", "normal");
-          doc.setTextColor(15, 23, 42);
+          docPdf.setFont("helvetica", "normal");
+          docPdf.setTextColor(15, 23, 42);
           
-          const textoLineas = doc.splitTextToSize(n.texto, 180);
-          doc.text(textoLineas, 14, yPos + 6);
+          const textoLineas = docPdf.splitTextToSize(n.texto, 180);
+          docPdf.text(textoLineas, 14, yPos + 6);
           
           yPos += (textoLineas.length * 6) + 14;
         });
       }
 
-      doc.setFontSize(9);
-      doc.setTextColor(150, 150, 150);
-      doc.text("Sistema de Acompañamiento Académico - 7 EGB", 14, 285);
+      docPdf.setFontSize(9);
+      docPdf.setTextColor(150, 150, 150);
+      docPdf.text("Sistema de Acompañamiento Académico - 7 EGB", 14, 285);
 
-      doc.save(`Bitacora_${alumnoActualNombre.replace(/[^a-zA-Z]/g, "_")}.pdf`);
+      docPdf.save(`Bitacora_${alumnoActualNombre.replace(/[^a-zA-Z]/g, "_")}.pdf`);
     }
 
     function shuffle(array) {
@@ -868,7 +868,7 @@
       });
       navigator.clipboard.writeText(textoTotal.trim()).then(() => {
         alert("¡Todos los grupos fueron copiados al portapapeles!");
-      }).catch(exports => {
+      }).catch(err => {
         console.error("Error al copiar todos: ", err);
       });
     }
@@ -877,7 +877,7 @@
       document.getElementById('modalGrupos').classList.remove('active');
     }
 
-    // 2. CARGAMOS LA NUBE AL INICIAR LA APLICACIÓN DE FORMA ASÍNCRONA
+    // CARGAMOS LA NUBE AL INICIAR
     cargarBitacorasNube();
   </script>
 </body>
