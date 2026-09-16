@@ -5,411 +5,116 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tablero 7 EGB - Participación y Bitácora</title>
   
-  <!-- ANDROID CHROME CONFIGURACIÓN PWA -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#0f172a">
   <link rel="manifest" href="manifest.json">
-  <!-- IPHONE SAFARI CONFIGURACIÓN PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Tablero 7 EGB">
 
-  <!-- LIBRERÍA JSPDF PARA CREAR PDF DESDE LA WEB -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 100vw;
-      height: 100dvh;
-      overflow: hidden;
-      background-color: #0f172a;
+      margin: 0; padding: 0; width: 100vw; height: 100dvh;
+      overflow: hidden; background-color: #0f172a;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: #f8fafc;
-      user-select: none;
-      display: flex;
-      flex-direction: column;
+      color: #f8fafc; user-select: none; display: flex; flex-direction: column;
     }
-
     header {
-      background-color: #1e293b;
-      padding: 6px 10px;
-      text-align: center;
-      border-bottom: 2px solid #38bdf8;
-      flex-shrink: 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      background-color: #1e293b; padding: 6px 10px; text-align: center;
+      border-bottom: 2px solid #38bdf8; flex-shrink: 0;
+      display: flex; justify-content: space-between; align-items: center;
     }
-
-    h1 {
-      margin: 0;
-      font-size: 18px;
-      letter-spacing: 1px;
-    }
-
+    h1 { margin: 0; font-size: 18px; letter-spacing: 1px; }
     .grid-container {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: 6px;
-      padding: 6px;
-      flex-grow: 1;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
+      display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(3, 1fr);
+      gap: 6px; padding: 6px; flex-grow: 1; width: 100%; height: 100%; overflow: hidden;
     }
-
     @media (max-aspect-ratio: 1/1) {
-      .grid-container {
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(5, 1fr);
-      }
+      .grid-container { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(5, 1fr); }
     }
-
-    /* ESTILO BASE DE LA TARJETA */
     .student-card {
-      background-color: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 6px;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-      overflow: hidden;
-      cursor: pointer;
-      position: relative;
+      background-color: #1e293b; border: 1px solid #334155; border-radius: 6px;
+      padding: 8px; display: flex; flex-direction: column; justify-content: center;
+      align-items: center; gap: 6px; transition: all 0.2s ease; overflow: hidden;
+      cursor: pointer; position: relative;
     }
-
-    .student-card:hover {
-      filter: brightness(1.15);
-    }
-
-    /* INDICADOR DE NOTAS */
+    .student-card:hover { filter: brightness(1.15); }
     .note-indicator {
-      position: absolute;
-      top: 4px;
-      left: 6px;
-      width: 8px;
-      height: 8px;
-      background-color: #38bdf8;
-      border-radius: 50%;
-      display: none;
+      position: absolute; top: 4px; left: 6px; width: 8px; height: 8px;
+      background-color: #38bdf8; border-radius: 50%; display: none;
     }
-    .student-card.has-notes .note-indicator {
-      display: block;
-    }
-
-    /* ESTRELLA PARA AVANZADOS */
+    .student-card.has-notes .note-indicator { display: block; }
     .star-badge {
-      position: absolute;
-      top: 3px;
-      right: 5px;
-      color: #facc15;
-      font-size: 20px;
-      font-weight: bold;
-      text-shadow: 
-        -1px -1px 0 #713f12,  
-         1px -1px 0 #713f12,
-        -1px  1px 0 #713f12,
-         1px  1px 0 #713f12,
-         0 2px 4px rgba(0, 0, 0, 0.4);
+      position: absolute; top: 3px; right: 5px; color: #facc15; font-size: 20px; font-weight: bold;
+      text-shadow: -1px -1px 0 #713f12, 1px -1px 0 #713f12, -1px 1px 0 #713f12, 1px 1px 0 #713f12, 0 2px 4px rgba(0, 0, 0, 0.4);
       pointer-events: none;
     }
-
-    /* CATEGORÍAS */
-    .student-card.cat-avanzado {
-      background-color: #fef08a;
-      border-color: #eab308;
-    }
+    .student-card.cat-avanzado { background-color: #fef08a; border-color: #eab308; }
     .student-card.cat-avanzado .student-number { background-color: #ca8a04; color: #fef08a; }
     .student-card.cat-avanzado .student-lastname { color: #854d0e; }
     .student-card.cat-avanzado .student-name { color: #713f12; }
-
-    .student-card.cat-ayuda {
-      background-color: #e9d5ff;
-      border-color: #a855f7;
-    }
+    .student-card.cat-ayuda { background-color: #e9d5ff; border-color: #a855f7; }
     .student-card.cat-ayuda .student-number { background-color: #7e22ce; color: #f3e8ff; }
     .student-card.cat-ayuda .student-lastname { color: #6b21a8; }
     .student-card.cat-ayuda .student-name { color: #581c87; }
-
-    /* ESTADO USADO */
     .student-card.used {
-      background-color: #1e293b !important;
-      border-color: #334155 !important;
-      opacity: 0.3;
+      background-color: #1e293b !important; border-color: #334155 !important; opacity: 0.3;
     }
     .student-card.used .student-number { background-color: #475569 !important; color: #94a3b8 !important; }
-    .student-card.used .student-lastname,
-    .student-card.used .student-name { color: #64748b !important; text-decoration: line-through; }
-    .student-card.used .star-badge { opacity: 0.2; }
-
-    .number-lastname-row {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 6px;
-      width: 100%;
-    }
-
+    .student-card.used .student-lastname, .student-card.used .student-name { color: #64748b !important; text-decoration: line-through; }
+    .number-lastname-row { display: flex; flex-direction: row; align-items: center; gap: 6px; width: 100%; }
     .student-number {
-      background-color: #38bdf8;
-      color: #0f172a;
-      font-weight: bold;
-      min-width: 22px;
-      height: 18px;
-      border-radius: 3px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      flex-shrink: 0;
+      background-color: #38bdf8; color: #0f172a; font-weight: bold; min-width: 22px; height: 18px;
+      border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;
     }
-
-    .student-lastname {
-      font-size: 12px;
-      font-weight: bold;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: #38bdf8;
-      flex-grow: 1;
-    }
-
-    .student-name {
-      font-size: 18px;
-      font-weight: bold;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: #f1f5f9;
-      width: 100%;
-      text-align: center;
-    }
-
-    footer {
-      padding: 6px 10px;
-      text-align: center;
-      background-color: #0f172a;
-      flex-shrink: 0;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .action-btn {
-      border: none;
-      padding: 6px 14px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
+    .student-lastname { font-size: 12px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #38bdf8; flex-grow: 1; }
+    .student-name { font-size: 18px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f1f5f9; width: 100%; text-align: center; }
+    footer { padding: 6px 10px; text-align: center; background-color: #0f172a; flex-shrink: 0; display: flex; justify-content: center; gap: 10px; }
+    .action-btn { border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 5px; }
     .reset-btn { background-color: #ef4444; color: white; }
-    .reset-btn:hover { background-color: #dc2626; }
-
     .group-btn { background-color: #0284c7; color: white; }
-    .group-btn:hover { background-color: #0369a1; }
-
     .pdf-btn { background-color: #10b981; color: white; }
-    .pdf-btn:hover { background-color: #059669; }
-
-    /* MODALES */
     .modal-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100dvh;
-      background: rgba(15, 23, 42, 0.85);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(15, 23, 42, 0.85);
+      display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
     }
-    .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
     .modal-content {
-      background-color: #1e293b;
-      border: 2px solid #38bdf8;
-      border-radius: 8px;
-      width: 90%;
-      max-width: 600px;
-      max-height: 85vh;
-      display: flex;
-      flex-direction: column;
-      padding: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      background-color: #1e293b; border: 2px solid #38bdf8; border-radius: 8px; width: 90%; max-width: 600px;
+      max-height: 85vh; display: flex; flex-direction: column; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #334155;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
-    }
-
-    .modal-header h2 {
-      margin: 0;
-      font-size: 18px;
-      color: #38bdf8;
-    }
-
-    .close-modal {
-      background: none;
-      border: none;
-      color: #94a3b8;
-      font-size: 20px;
-      cursor: pointer;
-    }
-    .close-modal:hover { color: #fff; }
-
-    .modal-body {
-      overflow-y: auto;
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding-right: 4px;
-    }
-
-    /* BITÁCORA */
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 12px; }
+    .modal-header h2 { margin: 0; font-size: 18px; color: #38bdf8; }
+    .close-modal { background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; }
+    .modal-body { overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
     .bitacora-textarea {
-      width: 100%;
-      height: 80px;
-      background-color: #0f172a;
-      color: #f8fafc;
-      border: 1px solid #334155;
-      border-radius: 4px;
-      padding: 8px;
-      resize: vertical;
-      font-family: inherit;
-      font-size: 14px;
+      width: 100%; height: 80px; background-color: #0f172a; color: #f8fafc; border: 1px solid #334155;
+      border-radius: 4px; padding: 8px; resize: vertical; font-family: inherit; font-size: 14px;
     }
-    .bitacora-textarea:focus { outline: none; border-color: #38bdf8; }
-
-    .historial-lista {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 220px;
-      overflow-y: auto;
-      margin-top: 5px;
-    }
-    .nota-item {
-      background-color: #0f172a;
-      border-left: 3px solid #38bdf8;
-      padding: 8px;
-      border-radius: 4px;
-      font-size: 13px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .nota-header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .nota-fecha {
-      font-size: 11px;
-      color: #94a3b8;
-    }
-    .nota-acciones {
-      display: flex;
-      gap: 6px;
-    }
-    .btn-acc {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 12px;
-      padding: 0;
-    }
+    .historial-lista { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; margin-top: 5px; }
+    .nota-item { background-color: #0f172a; border-left: 3px solid #38bdf8; padding: 8px; border-radius: 4px; font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+    .nota-header-row { display: flex; justify-content: space-between; align-items: center; }
+    .nota-fecha { font-size: 11px; color: #94a3b8; }
+    .nota-acciones { display: flex; gap: 6px; }
+    .btn-acc { background: none; border: none; cursor: pointer; font-size: 12px; padding: 0; }
     .btn-editar { color: #38bdf8; }
     .btn-eliminar { color: #ef4444; }
-
-    .modal-footer-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 5px;
-    }
-
-    /* GRUPOS */
-    .modal-actions-top {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 8px;
-    }
-
-    .group-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 10px;
-    }
-    .group-card {
-      background-color: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 6px;
-      padding: 10px;
-      position: relative;
-    }
+    .modal-footer-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+    .modal-actions-top { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+    .group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+    .group-card { background-color: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 10px; position: relative; }
     .group-card h3 {
-      margin: 0 0 6px 0;
-      font-size: 14px;
-      color: #facc15;
-      border-bottom: 1px solid #1e293b;
-      padding-bottom: 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      margin: 0 0 6px 0; font-size: 14px; color: #facc15; border-bottom: 1px solid #1e293b;
+      padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;
     }
-    .btn-copy-group {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 12px;
-      color: #38bdf8;
-      padding: 2px 6px;
-      border-radius: 3px;
-    }
-    .btn-copy-group:hover {
-      background-color: #1e293b;
-    }
-    .group-member {
-      font-size: 13px;
-      padding: 3px 0;
-      display: flex;
-      justify-content: space-between;
-    }
-    .member-role {
-      font-size: 11px;
-      padding: 1px 5px;
-      border-radius: 3px;
-    }
+    .btn-copy-group { background: none; border: none; cursor: pointer; font-size: 12px; color: #38bdf8; padding: 2px 6px; border-radius: 3px; }
+    .group-member { font-size: 13px; padding: 3px 0; display: flex; justify-content: space-between; }
+    .member-role { font-size: 11px; padding: 1px 5px; border-radius: 3px; }
     .role-ayuda { background-color: #7e22ce; color: #f3e8ff; }
     .role-avanzado { background-color: #ca8a04; color: #fef08a; }
-    .role-promedio { background-color: #475569; color: #f8fafc; }
   </style>
 </head>
 <body>
@@ -425,7 +130,6 @@
     <button class="action-btn reset-btn" onclick="resetAll()">Restaurar Todo el Tablero</button>
   </footer>
 
-  <!-- MODAL DE GRUPOS -->
   <div class="modal-overlay" id="modalGrupos">
     <div class="modal-content">
       <div class="modal-header">
@@ -439,7 +143,6 @@
     </div>
   </div>
 
-  <!-- MODAL DE BITÁCORA / EXPEDIENTE -->
   <div class="modal-overlay" id="modalBitacora">
     <div class="modal-content">
       <div class="modal-header">
@@ -461,16 +164,16 @@
     </div>
   </div>
 
-  <!-- SCRIPT CON FIREBASE Y LÓGICA -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+    // CONFIGURACIÓN UNIFICADA CON TU PROYECTO REAL (Participacion1BGU)
     const firebaseConfig = {
-      apiKey: "AIzaSyDcmoMtCw0Vjp1aZbHqkOfqejfg19ghzgg",
-      authDomain: "participacion7egb.firebaseapp.com",
-      projectId: "participacion7egb",
-      storageBucket: "participacion7egb.firebasestorage.app",
+      apiKey: "AIzaSyDcmoMtCw0Vjp1aZbHqkOfqejfg19ghzgg", // Mantén tu apiKey general si es la misma del proyecto
+      authDomain: "participacion1bgu.firebaseapp.com",
+      projectId: "participacion1bgu",
+      storageBucket: "participacion1bgu.firebasestorage.app",
       messagingSenderId: "663983703486",
       appId: "1:663983703486:web:7969ef175c15717ac2a5ef"
     };
@@ -497,7 +200,7 @@
     ];
 
     const grid = document.getElementById('grid');
-    let alumnoActualId = null; // Se mantendrá estrictamente como String
+    let alumnoActualId = null;
     let alumnoActualNombre = "";
     let bitacorasGlobal = {};
     let editandoIndice = null;
@@ -513,9 +216,9 @@
 
     async function cargarBitacorasNube() {
       try {
+        // Usamos una colección separada dentro de Participacion1BGU para este curso
         const querySnapshot = await getDocs(collection(db, "bitacoras_7egb"));
         querySnapshot.forEach((docSnap) => {
-          // Forzamos la llave como String para evitar conflictos de tipos
           bitacorasGlobal[String(docSnap.id)] = docSnap.data().notas || [];
         });
         actualizarIndicadoresNotas();
@@ -538,15 +241,13 @@
       });
     }
 
-    // RENDERIZAR TARJETAS EN EL DOM
     alumnos.forEach((alumno) => {
       const [apellido, nombresOriginales] = alumno.nombre.split(', ');
       const nombresFormateados = formatearNombre(nombresOriginales);
       const numStr = alumno.id < 10 ? `0${alumno.id}` : alumno.id;
       
       const card = document.createElement('div');
-      const catClass = `cat-${alumno.categoria}`;
-      card.className = `student-card ${catClass}`;
+      card.className = `student-card cat-${alumno.categoria}`;
       card.id = `card-${alumno.id}`;
 
       const estrellaHtml = alumno.categoria === 'avanzado' ? '<div class="star-badge">★</div>' : '';
@@ -562,11 +263,7 @@
       `;
 
       let pressTimer = null;
-      const startPress = () => {
-        pressTimer = setTimeout(() => {
-          abrirBitacora(alumno.id, alumno.nombre);
-        }, 600);
-      };
+      const startPress = () => { pressTimer = setTimeout(() => { abrirBitacora(alumno.id, alumno.nombre); }, 600); };
       const cancelPress = () => clearTimeout(pressTimer);
 
       card.addEventListener('mousedown', startPress);
@@ -574,28 +271,23 @@
       card.addEventListener('mouseleave', cancelPress);
       card.addEventListener('touchstart', startPress);
       card.addEventListener('touchend', cancelPress);
-
-      card.addEventListener('click', () => {
-        toggleStatus(alumno.id);
-      });
+      card.addEventListener('click', () => { toggleStatus(alumno.id); });
 
       grid.appendChild(card);
     });
 
     window.toggleStatus = function(id) {
-      const card = document.getElementById(`card-${id}`);
-      card.classList.toggle('used');
+      document.getElementById(`card-${id}`).classList.toggle('used');
     }
 
     window.resetAll = function() {
       alumnos.forEach((alumno) => {
-        const card = document.getElementById(`card-${alumno.id}`);
-        card.classList.remove('used');
+        document.getElementById(`card-${alumno.id}`).classList.remove('used');
       });
     }
 
     window.abrirBitacora = function(id, nombreCompleto) {
-      alumnoActualId = String(id); // Convertido explícitamente a String
+      alumnoActualId = String(id);
       alumnoActualNombre = nombreCompleto;
       editandoIndice = null;
       document.getElementById('tituloBitacora').innerText = `Bitácora: ${nombreCompleto}`;
@@ -671,14 +363,13 @@
         actualizarIndicadoresNotas();
       } catch (e) {
         console.error("Error al guardar en Firebase: ", e);
-        alert("Hubo un error al guardar en la nube. Revisa las reglas de seguridad de Firestore.");
+        alert("Hubo un error al guardar. Asegúrate de que las reglas de Firestore estén permitidas (allow read, write: if true;).");
       }
     }
 
     window.prepararEdicionNota = function(idx) {
       editandoIndice = idx;
-      const notasArr = bitacorasGlobal[alumnoActualId] || [];
-      const nota = notasArr[idx];
+      const nota = (bitacorasGlobal[alumnoActualId] || [])[idx];
       document.getElementById('textoNuevaNota').value = nota.texto;
       document.getElementById('labelEditorNota').innerText = `Editando nota #${idx + 1}:`;
       document.getElementById('btnGuardarNota').innerText = "💾 Actualizar Nota";
@@ -686,7 +377,7 @@
     }
 
     window.eliminarNotaBitacora = async function(idx) {
-      if (!confirm("¿Estás seguro de eliminar esta nota de la bitácora?")) return;
+      if (!confirm("¿Estás seguro de eliminar esta nota?")) return;
 
       const notasArr = bitacorasGlobal[alumnoActualId] || [];
       notasArr.splice(idx, 1);
@@ -771,7 +462,7 @@
       const disponibles = alumnos.filter(a => !document.getElementById(`card-${a.id}`).classList.contains('used'));
 
       if (disponibles.length === 0) {
-        alert("¡Todos los estudiantes ya han sido seleccionados o agrupados! Restaura el tablero si deseas volver a agrupar.");
+        alert("¡Todos los estudiantes ya han sido seleccionados o agrupados!");
         return;
       }
 
@@ -819,8 +510,7 @@
       gruposUltimos = grupos;
 
       idsSeleccionados.forEach(id => {
-        const card = document.getElementById(`card-${id}`);
-        if (card) card.classList.add('used');
+        document.getElementById(`card-${id}`).classList.add('used');
       });
 
       const modalBody = document.getElementById('modalBodyGrupos');
@@ -857,8 +547,6 @@
       let texto = `*Grupo ${index + 1}*\n` + g.map(m => `- ${m.nombre}`).join('\n');
       navigator.clipboard.writeText(texto).then(() => {
         alert(`¡Grupo ${index + 1} copiado al portapapeles!`);
-      }).catch(err => {
-        console.error("Error al copiar: ", err);
       });
     }
 
@@ -869,8 +557,6 @@
       });
       navigator.clipboard.writeText(textoTotal.trim()).then(() => {
         alert("¡Todos los grupos fueron copiados al portapapeles!");
-      }).catch(err => {
-        console.error("Error al copiar todos: ", err);
       });
     }
 
@@ -878,7 +564,6 @@
       document.getElementById('modalGrupos').classList.remove('active');
     }
 
-    // CARGAMOS LA NUBE AL INICIAR
     cargarBitacorasNube();
   </script>
 </body>
