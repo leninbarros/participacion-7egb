@@ -505,7 +505,7 @@
         renderizarHistorialNotas();
         actualizarIndicadoresNotas();
       } catch (e) {
-        console.error("Error al guardar en Firebase: ", e);
+        console.error("Error al guardar en la nube: ", e);
         alert("Hubo un error al guardar en la nube.");
       }
     }
@@ -604,45 +604,33 @@
         return;
       }
 
-      let ayudas = shuffle(disponibles.filter(a => a.categoria === 'ayuda'));
-      let avanzados = shuffle(disponibles.filter(a => a.categoria === 'avanzado'));
-      let promedios = shuffle(disponibles.filter(a => a.categoria === 'promedio'));
-
+      let lista = shuffle([...disponibles]);
       let grupos = [];
       let idsSeleccionados = [];
 
-      while (ayudas.length > 0 && avanzados.length > 0) {
-        let ayu = ayudas.pop();
-        let av = avanzados.pop();
-        let grupoActual = [ayu, av];
-        idsSeleccionados.push(ayu.id, av.id);
+      let total = lista.length;
+      let i = 0;
 
-        if (promedios.length > 0) {
-          let prom = promedios.pop();
-          grupoActual.push(prom);
-          idsSeleccionados.push(prom.id);
+      // Generar estrictamente grupos de 3 mientras sea posible
+      while (total - i >= 3) {
+        let grupoActual = [];
+        for (let j = 0; j < 3; j++) {
+          let alumnoObj = lista[i++];
+          grupoActual.push(alumnoObj);
+          idsSeleccionados.push(alumnoObj.id);
         }
         grupos.push(grupoActual);
       }
 
-      let remanentes = [...ayudas, ...avanzados, ...promedios];
-      shuffle(remanentes);
-
-      while (remanentes.length > 0) {
-        if (remanentes.length === 1 && grupos.length > 0) {
-          let ultimo = remanentes.pop();
-          grupos[grupos.length - 1].push(ultimo);
-          idsSeleccionados.push(ultimo.id);
-        } else if (remanentes.length >= 2) {
-          let cantidadTomar = (remanentes.length === 3) ? 3 : 2;
-          let subGrupo = remanentes.splice(0, cantidadTomar);
-          subGrupo.forEach(s => idsSeleccionados.push(s.id));
-          grupos.push(subGrupo);
-        } else {
-          let solo = remanentes.pop();
-          idsSeleccionados.push(solo.id);
-          grupos.push([solo]);
+      // Si sobran alumnos (1 o 2), se agrupan juntos al final como residuo
+      if (i < total) {
+        let grupoSobrante = [];
+        while (i < total) {
+          let alumnoObj = lista[i++];
+          grupoSobrante.push(alumnoObj);
+          idsSeleccionados.push(alumnoObj.id);
         }
+        grupos.push(grupoSobrante);
       }
 
       gruposUltimos = grupos;
